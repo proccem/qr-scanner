@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QR Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 20px; }
+    #reader { width: 300px; margin: auto; }
+    #result { margin-top: 20px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h2>Scan Guest QR Code</h2>
+  <div id="reader"></div>
+  <div id="result">Waiting for scan...</div>
+  <button onclick="location.reload()">🔄 Scan Another</button>
+
+  <script>
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbxBFOJ1wt-GNVmL8Df3-n1Q51CxNTUNLB63EkJC8Bt6oSVf9KEmMk-W96ekZEgZHYZ8Fw/exec";
+    let hasScanned = false;
+
+    function onScanSuccess(decodedText) {
+      if (hasScanned) return;
+      hasScanned = true;
+
+      document.getElementById('result').innerText = `⏳ Checking...`;
+
+      fetch(webAppUrl, {
+        method: 'POST',
+        body: JSON.stringify({ guestDetails: decodedText }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('result').innerText = data;
+      })
+      .catch(err => {
+        document.getElementById('result').innerText = "❌ Error: " + err;
+        hasScanned = false;
+      });
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+  </script>
+</body>
+</html>
